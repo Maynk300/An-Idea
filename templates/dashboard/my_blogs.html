@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+
+    <!-- Left Side -->
+    <div class="col-md-3">
+
+        <div class="nav flex-column nav-pills bg-light" aria-orientation="vertical">
+            <a href="{% url 'dashboard' %}" class="nav-link text-dark {% if request.resolver_match.url_name == 'dashboard' %}bg-warning{% endif %}">Dashboard</a>
+            <a href="{% url 'categories' %}" class="nav-link text-dark {% if request.resolver_match.url_name == 'categories' %}bg-warning{% endif %}">Category</a>
+            <a href="{% url 'my_blogs' %}" class="nav-link text-dark bg-warning">My Blogs</a>
+            <a href="" class="nav-link text-dark ">Layout</a>
+
+        </div>
+    </div>
+
+    <!-- Right Side -->
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>My Blogs</h4>
+            <a href="{% url 'create_blog' %}" class="btn btn-warning">Create New Blog</a>
+        </div>
+
+        {% if blogs %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for blog in blogs %}
+                    <tr>
+                        <td>
+                            <strong>{{ blog.title }}</strong>
+                            {% if blog.is_featured %}
+                            <span class="badge badge-warning ml-2">Featured</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ blog.category.category_name }}</td>
+                        <td>
+                            {% if blog.status == 'Published' %}
+                            <span class="badge badge-success">Published</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Draft</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ blog.created_at|date:"M d, Y" }}</td>
+                        <td>{{ blog.updated_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'edit_blog' blog.pk %}" class="btn btn-outline-primary" title="Edit">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3-1 1 10 10-1 1-10-10 1-1z"/>
+                                    </svg>
+                                </a>
+                                {% if blog.status == 'Draft' %}
+                                <a href="{% url 'publish_blog' blog.pk %}" class="btn btn-outline-success" title="Publish" onclick="return confirm('Publish this blog?')">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm0-2a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/>
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                    </svg>
+                                </a>
+                                {% else %}
+                                <a href="{% url 'unpublish_blog' blog.pk %}" class="btn btn-outline-warning" title="Unpublish" onclick="return confirm('Unpublish this blog?')">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm0-2a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/>
+                                        <path d="M5.5 8a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+                                    </svg>
+                                </a>
+                                {% endif %}
+                                <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteModal{{ blog.pk }}" title="Delete">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Delete Confirmation Modal -->
+                            <div class="modal fade" id="deleteModal{{ blog.pk }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ blog.pk }}" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel{{ blog.pk }}">Confirm Delete</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete "<strong>{{ blog.title }}</strong>"? This action cannot be undone.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                            <form action="{% url 'delete_blog' blog.pk %}" method="POST" style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h5 class="text-muted">No blogs yet</h5>
+                <p class="text-muted">Get started by creating your first blog post.</p>
+                <a href="{% url 'create_blog' %}" class="btn btn-warning">Create Blog</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

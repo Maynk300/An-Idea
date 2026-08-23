@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+
+    <!-- Left Side -->
+    <div class="col-md-3">
+
+        <div class="nav flex-column nav-pills bg-light" aria-orientation="vertical">
+            <a href="{% url 'dashboard' %}" class="nav-link text-dark {% if request.resolver_match.url_name == 'dashboard' %}bg-warning{% endif %}">Dashboard</a>
+            <a href="{% url 'categories' %}" class="nav-link text-dark {% if request.resolver_match.url_name == 'categories' %}bg-warning{% endif %}">Category</a>
+            <a href="{% url 'my_blogs' %}" class="nav-link text-dark bg-warning">My Blogs</a>
+            <a href="" class="nav-link text-dark ">Layout</a>
+
+        </div>
+    </div>
+
+    <!-- Right Side -->
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>{{ action }} Blog</h4>
+            <a href="{% url 'my_blogs' %}" class="btn btn-outline-secondary">Back to My Blogs</a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="{{ form.title.id_for_label }}">Title <span class="text-danger">*</span></label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.title.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.category.id_for_label }}">Category <span class="text-danger">*</span></label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.category.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.featured_image.id_for_label }}">Featured Image <span class="text-danger">*</span></label>
+                        {{ form.featured_image }}
+                        {% if form.featured_image.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.featured_image.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Max 5MB. Formats: JPEG, PNG, WebP, GIF</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.short_description.id_for_label }}">Short Description <span class="text-danger">*</span></label>
+                        {{ form.short_description }}
+                        {% if form.short_description.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.short_description.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Max 500 characters</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.blog_body.id_for_label }}">Blog Content <span class="text-danger">*</span></label>
+                        {{ form.blog_body }}
+                        {% if form.blog_body.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.blog_body.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="{{ form.status.id_for_label }}">Status</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.status.errors %}
+                                <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            <div class="form-check mt-4">
+                                {{ form.is_featured }}
+                                <label class="form-check-label" for="{{ form.is_featured.id_for_label }}">Featured</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-warning">{{ action }} Blog</button>
+                        <a href="{% url 'my_blogs' %}" class="btn btn-outline-secondary ml-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
