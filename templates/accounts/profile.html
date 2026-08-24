@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        {% if profile.profile_picture %}
+                        <img src="{{ profile.profile_picture.url }}" alt="{{ profile_user.username }}" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-warning d-inline-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px;">
+                            <span class="text-white" style="font-size: 4rem; font-weight: bold;">{{ profile_user.username|first|upper }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-9">
+                        <h2 class="mb-1">{{ profile_user.username }}</h2>
+                        <p class="text-muted">Member since {{ profile.date_joined|date:"F d, Y" }}</p>
+                        <hr>
+                        <p>{{ profile.bio|default:"This user hasn't written a bio yet." }}</p>
+                        {% if request.user == profile_user %}
+                        <a href="{% url 'edit_profile' %}" class="btn btn-warning">Edit Profile</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Published Posts ({{ published_count }})</h4>
+            </div>
+            <div class="card-body">
+                {% if published_blogs %}
+                <div class="row">
+                    {% for blog in published_blogs %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            {% if blog.featured_image %}
+                            <img src="{{ blog.featured_image.url }}" class="card-img-top" alt="{{ blog.title }}" style="height: 200px; object-fit: cover;">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ blog.title }}</h5>
+                                <p class="card-text text-muted small">{{ blog.short_description|truncatewords:20 }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge badge-success">Published</span>
+                                    <small class="text-muted">{{ blog.updated_at|date:"M d, Y" }}</small>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <a href="{% url 'blogs' blog.slug %}" class="btn btn-sm btn-outline-warning">Read More</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="text-muted">No published posts yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

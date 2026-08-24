@@ -39,6 +39,8 @@
             {% else %}
             <span><a href="{% url 'dashboard' %}">Dashboard</a></span>
             &emsp;
+            <span><a href="{% url 'profile' user.username %}">Profile</a></span>
+            &emsp;
             <span><a href="{% url 'logout' %}">LogOut</a></span>
             {% endif %}
           </div>
