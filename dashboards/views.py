@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from blogs.models import category, Blog
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from Blog_main.forms import BlogForm
+from blogs.forms import BlogForm
 
 
 @login_required(login_url='login')

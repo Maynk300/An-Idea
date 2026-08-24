@@ -26,10 +26,14 @@ urlpatterns = [
     path('', views.home , name='home'),
     path('category/',include('blogs.urls') ),
     path('blogs/<slug:slug>/', BlogsView.blogs , name='blogs'),
+    path('blogs/<slug:slug>/comment/', BlogsView.add_comment , name='add_comment'),
+    path('blogs/<slug:slug>/like/', BlogsView.like_blog , name='like_blog'),
     path('blogs/search/',BlogsView.search, name='search'),
     path('register/', views.register, name='register'),
     path('login/',views.login, name='login'),
     path('logout/', views.logout, name='logout'),
+    path('comment/<int:comment_id>/edit/', BlogsView.edit_comment , name='edit_comment'),
+    path('comment/<int:comment_id>/delete/', BlogsView.delete_comment , name='delete_comment'),
 
 # Dashboards
     
