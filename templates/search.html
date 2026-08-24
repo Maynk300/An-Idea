@@ -19,6 +19,14 @@
       </div>
     </div>
     {% endfor %}
+    {% else %}
+    <p>No posts found for "{{ keyword }}".</p>
     {% endif %}
+
+  {% if blogs.has_other_pages %}
+  <div class="col-12 mt-4">
+      {% include 'partials/pagination.html' with page_obj=blogs query_params=query_params %}
+  </div>
+  {% endif %}
 
 {% endblock %}

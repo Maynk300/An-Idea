@@ -1,4 +1,3 @@
-from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from blogs.models import category, Blog
@@ -6,11 +5,17 @@ from assignments.models import About
 from .forms import RegistrationForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import auth
+from django.core.paginator import Paginator
 
 
 def home(request):
     featured_Post = Blog.objects.filter(is_featured=True, status='Published').order_by('updated_at')
-    recent_post = Blog.objects.filter(is_featured=False, status='Published')
+    recent_post = Blog.objects.filter(is_featured=False, status='Published').order_by('-updated_at')
+
+    # Paginate recent posts
+    paginator = Paginator(recent_post, 6)
+    page_number = request.GET.get('page')
+    recent_post_page = paginator.get_page(page_number)
 
     # fetch about us
     try:
@@ -20,7 +25,7 @@ def home(request):
 
     context = {
         'featured_Post': featured_Post,
-        'recent_post': recent_post,
+        'recent_post': recent_post_page,
         'about': about,
     }
     return render(request, 'home.html', context)

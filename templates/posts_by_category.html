@@ -39,6 +39,16 @@
 
   </div>
 
+  <!-- Pagination for category posts -->
+  {% if posts.has_other_pages %}
+  <div class="col-12 mt-4">
+      {% include 'partials/pagination.html' with page_obj=posts query_params='' %}
+  </div>
+  {% endif %}
+
+
+</div>
+
 
 
 

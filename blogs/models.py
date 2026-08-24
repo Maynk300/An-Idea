@@ -47,6 +47,7 @@ class Blog(models.Model):
     blog_body = models.TextField(max_length=2000)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Draft")
     is_featured = models.BooleanField(default=False)
+    tags = models.ManyToManyField('Tag', blank=True, related_name='blogs')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -66,6 +67,18 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.author.username} on {self.blog.title}'
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=60, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
 
 
 class Like(models.Model):

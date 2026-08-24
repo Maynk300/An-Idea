@@ -1,11 +1,20 @@
 from django import forms
-from .models import Blog, category, Comment
+from .models import Blog, category, Comment, Tag
 
 
 class BlogForm(forms.ModelForm):
+    tags = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter tags separated by commas (e.g., django, python, webdev)'
+        }),
+        help_text='Enter tags separated by commas. New tags will be created automatically.'
+    )
+
     class Meta:
         model = Blog
-        fields = ('title', 'category', 'featured_image', 'short_description', 'blog_body', 'status', 'is_featured')
+        fields = ('title', 'category', 'featured_image', 'short_description', 'blog_body', 'status', 'is_featured', 'tags')
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
@@ -15,6 +24,11 @@ class BlogForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-control'}),
             'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields['tags'].initial = ', '.join([tag.name for tag in self.instance.tags.all()])
 
 
 class CommentForm(forms.ModelForm):

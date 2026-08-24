@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from blogs.models import category, Blog
+from blogs.models import category, Blog, Tag
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from blogs.forms import BlogForm
+from django.core.paginator import Paginator
+from django.utils.text import slugify
 
 
 @login_required(login_url='login')
@@ -32,10 +34,28 @@ def categories(request):
 @login_required(login_url='login')
 def my_blogs(request):
     blogs = Blog.objects.filter(author=request.user).order_by('-updated_at')
+
+    paginator = Paginator(blogs, 10)
+    page_number = request.GET.get('page')
+    blogs_page = paginator.get_page(page_number)
+
     context = {
-        'blogs': blogs,
+        'blogs': blogs_page,
     }
     return render(request, 'dashboard/my_blogs.html', context)
+
+
+def _process_tags(tag_string):
+    """Parse comma-separated tag string and return list of Tag objects."""
+    if not tag_string:
+        return []
+    tag_names = [name.strip() for name in tag_string.split(',') if name.strip()]
+    tags = []
+    for name in tag_names:
+        slug = slugify(name)
+        tag, _ = Tag.objects.get_or_create(name=name, defaults={'slug': slug})
+        tags.append(tag)
+    return tags
 
 
 @login_required(login_url='login')
@@ -46,6 +66,10 @@ def create_blog(request):
             blog = form.save(commit=False)
             blog.author = request.user
             blog.save()
+            # Handle tags
+            tag_string = form.cleaned_data.get('tags', '')
+            tags = _process_tags(tag_string)
+            blog.tags.set(tags)
             messages.success(request, 'Blog created successfully.')
             return redirect('my_blogs')
     else:
@@ -64,6 +88,10 @@ def edit_blog(request, pk):
         form = BlogForm(request.POST, request.FILES, instance=blog)
         if form.is_valid():
             form.save()
+            # Handle tags
+            tag_string = form.cleaned_data.get('tags', '')
+            tags = _process_tags(tag_string)
+            blog.tags.set(tags)
             messages.success(request, 'Blog updated successfully.')
             return redirect('my_blogs')
     else:

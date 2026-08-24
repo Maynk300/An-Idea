@@ -53,6 +53,16 @@
             <!-- Category -->
             <p><strong>Category:</strong> {{ single_blog.category }}</p>
 
+            <!-- Tags -->
+            {% if single_blog.tags.all %}
+            <div class="blog-tags mb-3">
+                <strong>Tags:</strong>
+                {% for tag in single_blog.tags.all %}
+                <a href="{% url 'posts_by_tag' tag.slug %}" class="badge badge-info ml-1">{{ tag.name }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <!-- Image -->
             <img src="{{ single_blog.featured_image.url }}" alt="Blog Image" class="blog-image mb-3">
 

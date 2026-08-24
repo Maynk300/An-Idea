@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from blogs.models import Blog
 from .models import Profile
 from .forms import ProfileForm
+from django.core.paginator import Paginator
 
 
 def profile_view(request, username):
@@ -13,10 +14,14 @@ def profile_view(request, username):
     published_blogs = Blog.objects.filter(author=profile_user, status='Published').order_by('-updated_at')
     published_count = published_blogs.count()
 
+    paginator = Paginator(published_blogs, 6)
+    page_number = request.GET.get('page')
+    published_blogs_page = paginator.get_page(page_number)
+
     context = {
         'profile': profile,
         'profile_user': profile_user,
-        'published_blogs': published_blogs,
+        'published_blogs': published_blogs_page,
         'published_count': published_count,
     }
     return render(request, 'accounts/profile.html', context)
