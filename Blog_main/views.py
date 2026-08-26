@@ -39,7 +39,7 @@ def register(request):
             messages.success(request, 'Registration successful. Please log in.')
             return redirect('login')
         else:
-            print(form.errors)
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = RegistrationForm()
     context = {

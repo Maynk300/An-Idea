@@ -1,7 +1,8 @@
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib.auth.models import User
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
 
 
 def validate_image_file(value):
@@ -58,6 +59,54 @@ class Blog(models.Model):
 
     def __str__(self):
         return self.title
+
+    def _generate_unique_slug(self):
+        """Generate a unique slug from the title, appending -2, -3, etc. if needed."""
+        if not self.title:
+            return None
+        
+        base_slug = slugify(self.title)
+        if not base_slug:
+            base_slug = 'untitled'
+        
+        # Truncate to max_length minus room for counter
+        max_base_length = self._meta.get_field('slug').max_length - 5  # room for '-9999'
+        if len(base_slug) > max_base_length:
+            base_slug = base_slug[:max_base_length].rstrip('-')
+        
+        slug = base_slug
+        counter = 1
+        
+        # Check for existing slugs, excluding self if updating
+        queryset = Blog.objects.filter(slug=slug)
+        if self.pk:
+            queryset = queryset.exclude(pk=self.pk)
+        
+        while queryset.exists():
+            counter += 1
+            slug = f"{base_slug}-{counter}"
+            queryset = Blog.objects.filter(slug=slug)
+            if self.pk:
+                queryset = queryset.exclude(pk=self.pk)
+        
+        return slug
+
+    def _title_has_changed(self):
+        """Check if the title has changed since the object was fetched from DB."""
+        if not self.pk:
+            return True
+        try:
+            original = Blog.objects.get(pk=self.pk)
+            return original.title != self.title
+        except Blog.DoesNotExist:
+            return True
+
+    def save(self, *args, **kwargs):
+        # Generate slug only if not explicitly provided (blank)
+        # Also regenerate if title changed during edit
+        if not self.slug or (self.pk and self._title_has_changed()):
+            self.slug = self._generate_unique_slug()
+        super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         from django.urls import reverse

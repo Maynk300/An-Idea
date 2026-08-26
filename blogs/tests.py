@@ -116,6 +116,152 @@ class BlogModelTest(TestCase):
                 blog_body='Blog body content'
             )
 
+    def test_blog_auto_generate_slug_from_title(self):
+        """Test that slug is auto-generated from title when not provided."""
+        blog = Blog.objects.create(
+            title='My Awesome Blog Post',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Blog body content'
+        )
+        self.assertEqual(blog.slug, 'my-awesome-blog-post')
+
+    def test_blog_auto_generate_unique_slug_for_duplicate_titles(self):
+        """Test that duplicate titles get unique slugs with -2, -3 suffixes."""
+        blog1 = Blog.objects.create(
+            title='Same Title',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Blog body content 1'
+        )
+        blog2 = Blog.objects.create(
+            title='Same Title',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Blog body content 2'
+        )
+        blog3 = Blog.objects.create(
+            title='Same Title',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Blog body content 3'
+        )
+        self.assertEqual(blog1.slug, 'same-title')
+        self.assertEqual(blog2.slug, 'same-title-2')
+        self.assertEqual(blog3.slug, 'same-title-3')
+
+    def test_blog_edit_without_title_change_keeps_slug(self):
+        """Test that editing a blog without changing title keeps the same slug."""
+        blog = Blog.objects.create(
+            title='Original Title',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Original content'
+        )
+        original_slug = blog.slug
+        blog.blog_body = 'Updated content'
+        blog.save()
+        self.assertEqual(blog.slug, original_slug)
+
+    def test_blog_edit_with_title_change_regenerates_slug(self):
+        """Test that editing a blog with changed title regenerates slug."""
+        blog = Blog.objects.create(
+            title='Original Title',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Original content'
+        )
+        blog.title = 'New Title'
+        blog.save()
+        self.assertEqual(blog.slug, 'new-title')
+
+    def test_blog_edit_title_change_to_existing_slug_appends_counter(self):
+        """Test that changing title to an existing slug appends counter."""
+        blog1 = Blog.objects.create(
+            title='First Blog',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Content 1'
+        )
+        blog2 = Blog.objects.create(
+            title='Second Blog',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Content 2'
+        )
+        # Change blog2's title to match blog1's title
+        blog2.title = 'First Blog'
+        blog2.save()
+        # Should get a unique slug, not conflict with blog1
+        self.assertEqual(blog2.slug, 'first-blog-2')
+        self.assertNotEqual(blog2.slug, blog1.slug)
+
+    def test_blog_slug_generation_handles_special_characters(self):
+        """Test slug generation handles special characters in title."""
+        blog = Blog.objects.create(
+            title='Hello World! @#$%^&*()',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Blog body content'
+        )
+        self.assertEqual(blog.slug, 'hello-world')
+
+    def test_blog_slug_generation_handles_unicode(self):
+        """Test slug generation handles unicode characters."""
+        blog = Blog.objects.create(
+            title='Café résumé naïve',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Blog body content'
+        )
+        self.assertEqual(blog.slug, 'cafe-resume-naive')
+
+    def test_blog_slug_max_length_respected(self):
+        """Test that generated slug respects max_length."""
+        long_title = 'A' * 200  # Very long title
+        blog = Blog.objects.create(
+            title=long_title,
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Blog body content'
+        )
+        self.assertLessEqual(len(blog.slug), 150)  # max_length of slug field
+
+    def test_blog_explicit_slug_not_overridden(self):
+        """Test that explicitly provided slug is not overridden."""
+        blog = Blog.objects.create(
+            title='Test Blog',
+            slug='custom-slug',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Blog body content'
+        )
+        self.assertEqual(blog.slug, 'custom-slug')
+
     def test_blog_tags_relationship(self):
         blog = Blog.objects.create(
             title='Test Blog',

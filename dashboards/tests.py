@@ -177,6 +177,72 @@ class CreateBlogViewTest(TestCase):
         self.assertNotIn('<script>', blog.blog_body)
         self.assertIn('<p>Safe content</p>', blog.blog_body)
 
+    def test_create_multiple_blogs_same_title_generates_unique_slugs(self):
+        """Test that creating multiple blogs with same title generates unique slugs."""
+        self.client.login(username='testuser', password='testpass123')
+        # Create first blog
+        response = self.client.post(reverse('create_blog'), {
+            'title': 'Duplicate Title',
+            'category': self.category.pk,
+            'short_description': 'Short description',
+            'blog_body': '<p>Blog body content 1</p>',
+            'status': 'Draft',
+            'is_featured': False,
+            'tags': 'tag1',
+            'featured_image': create_test_image()
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        blog1 = Blog.objects.get(slug='duplicate-title')
+        
+        # Create second blog with same title
+        response = self.client.post(reverse('create_blog'), {
+            'title': 'Duplicate Title',
+            'category': self.category.pk,
+            'short_description': 'Short description',
+            'blog_body': '<p>Blog body content 2</p>',
+            'status': 'Draft',
+            'is_featured': False,
+            'tags': 'tag2',
+            'featured_image': create_test_image()
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        blog2 = Blog.objects.get(slug='duplicate-title-2')
+        
+        # Create third blog with same title
+        response = self.client.post(reverse('create_blog'), {
+            'title': 'Duplicate Title',
+            'category': self.category.pk,
+            'short_description': 'Short description',
+            'blog_body': '<p>Blog body content 3</p>',
+            'status': 'Draft',
+            'is_featured': False,
+            'tags': 'tag3',
+            'featured_image': create_test_image()
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        blog3 = Blog.objects.get(slug='duplicate-title-3')
+        
+        self.assertEqual(blog1.slug, 'duplicate-title')
+        self.assertEqual(blog2.slug, 'duplicate-title-2')
+        self.assertEqual(blog3.slug, 'duplicate-title-3')
+
+    def test_create_blog_auto_generates_slug_from_title(self):
+        """Test that slug is auto-generated from title when not provided in form."""
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.post(reverse('create_blog'), {
+            'title': 'Auto Slug Blog',
+            'category': self.category.pk,
+            'short_description': 'Short description',
+            'blog_body': '<p>Blog body content</p>',
+            'status': 'Draft',
+            'is_featured': False,
+            'tags': 'auto',
+            'featured_image': create_test_image()
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        blog = Blog.objects.get(title='Auto Slug Blog')
+        self.assertEqual(blog.slug, 'auto-slug-blog')
+
 
 class EditBlogViewTest(TestCase):
     def setUp(self):
@@ -270,6 +336,71 @@ class EditBlogViewTest(TestCase):
         self.assertTrue(self.user_blog.tags.filter(name='newtag1').exists())
         self.assertTrue(self.user_blog.tags.filter(name='newtag2').exists())
         self.assertFalse(self.user_blog.tags.filter(name='OldTag').exists())
+
+    def test_edit_blog_without_title_change_keeps_slug(self):
+        """Test that editing a blog without changing title keeps the same slug."""
+        self.client.login(username='testuser', password='testpass123')
+        original_slug = self.user_blog.slug
+        fresh_image = create_test_image()
+        response = self.client.post(reverse('edit_blog', args=[self.user_blog.pk]), {
+            'title': 'User Blog',  # Same title
+            'category': self.category.pk,
+            'short_description': 'Updated description',
+            'blog_body': '<p>Updated content</p>',
+            'status': 'Published',
+            'is_featured': True,
+            'tags': 'updated, tags',
+            'featured_image': fresh_image
+        }, follow=True)
+        self.user_blog.refresh_from_db()
+        self.assertEqual(self.user_blog.slug, original_slug)
+
+    def test_edit_blog_with_title_change_regenerates_slug(self):
+        """Test that editing a blog with changed title regenerates slug."""
+        self.client.login(username='testuser', password='testpass123')
+        fresh_image = create_test_image()
+        response = self.client.post(reverse('edit_blog', args=[self.user_blog.pk]), {
+            'title': 'New Blog Title',
+            'category': self.category.pk,
+            'short_description': 'Updated description',
+            'blog_body': '<p>Updated content</p>',
+            'status': 'Published',
+            'is_featured': False,
+            'tags': 'new',
+            'featured_image': fresh_image
+        }, follow=True)
+        self.user_blog.refresh_from_db()
+        self.assertEqual(self.user_blog.slug, 'new-blog-title')
+
+    def test_edit_blog_title_change_to_existing_slug_appends_counter(self):
+        """Test that changing title to match another blog's slug appends counter."""
+        # Create another blog with a known slug
+        other_blog = Blog.objects.create(
+            title='Existing Blog',
+            slug='existing-blog',
+            category=self.category,
+            author=self.user,
+            featured_image=self.image,
+            short_description='Short description',
+            blog_body='Blog body content',
+            status='Published'
+        )
+        self.client.login(username='testuser', password='testpass123')
+        fresh_image = create_test_image()
+        response = self.client.post(reverse('edit_blog', args=[self.user_blog.pk]), {
+            'title': 'Existing Blog',  # Same title as other_blog
+            'category': self.category.pk,
+            'short_description': 'Updated description',
+            'blog_body': '<p>Updated content</p>',
+            'status': 'Published',
+            'is_featured': False,
+            'tags': 'new',
+            'featured_image': fresh_image
+        }, follow=True)
+        self.user_blog.refresh_from_db()
+        # Should get a unique slug, not conflict with other_blog
+        self.assertEqual(self.user_blog.slug, 'existing-blog-2')
+        self.assertNotEqual(self.user_blog.slug, other_blog.slug)
 
 
 class DeleteBlogViewTest(TestCase):
