@@ -1,87 +1,376 @@
-<!-- header part -->
-
-
 {% load static %}
 
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Django Blogs</title>
-    <link href="https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Playfair+Display:700,900" rel="stylesheet">
+    <title>{% block title %}An_Idea — Modern Blogging Platform{% endblock %}</title>
+
+    {% block meta_description %}
+    <meta name="description" content="Discover ideas, stories, and insights on An_Idea — a modern platform for writers and readers to share knowledge and inspire creativity.">
+    {% endblock %}
+
+    {% block canonical_url %}
+    {% if canonical_url %}
+    <link rel="canonical" href="{{ canonical_url }}">
+    {% endif %}
+    {% endblock %}
+
+    {% block og_tags %}
+    <meta property="og:title" content="{% block og_title %}An_Idea — Modern Blogging Platform{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Discover ideas, stories, and insights on An_Idea — a modern platform for writers and readers to share knowledge and inspire creativity.{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ canonical_url }}{% endblock %}">
+    {% block og_image %}
+    {% if og_image %}
+    <meta property="og:image" content="{{ og_image }}">
+    {% endif %}
+    {% endblock %}
+    {% endblock %}
+
+    {% block twitter_tags %}
+    <meta name="twitter:card" content="{% block twitter_card %}summary_large_image{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}An_Idea — Modern Blogging Platform{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Discover ideas, stories, and insights on An_Idea — a modern platform for writers and readers to share knowledge and inspire creativity.{% endblock %}">
+    {% block twitter_image %}
+    {% if twitter_image %}
+    <meta name="twitter:image" content="{{ twitter_image }}">
+    {% endif %}
+    {% endblock %}
+    {% endblock %}
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3.2 (for utilities only - we use custom CSS for design) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- Custom CSS -->
     <link href="{% static 'css/blog.css' %}" rel="stylesheet">
-  </head>
+
+    <!-- Theme Script (runs before paint to prevent flash) -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (theme === 'dark' || (!theme && prefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+</head>
 <body>
-    <div class="container">
-      <header class="blog-header py-3">
-        <div class="row flex-nowrap justify-content-between align-items-center">
-          <div class="col-4 pt-1">
-            <a class="blog-header-logo text-dark" href="/">Your Ideas</a>
-          </div>
-          <div class="col-4">
-            <form action="{% url 'search' %}" method="get">
-              <div class="input-group">
-                <input type="text" class="form-control" name="keyword" value="{{keyword}}" placeholder="Enter search term.." aria-label="Enter search">
-                <button class="btn btn-warning" id="button-search" type="submit">Go!</button>
+    <!-- Messages Container (for Django messages) -->
+    <div class="messages-container" id="messagesContainer" aria-live="polite" aria-atomic="true">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert" data-message-id="{{ forloop.counter }}">
+                    <div class="alert-content">
+                        {% if message.tags == 'success' %}
+                            <svg class="alert-icon" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        {% elif message.tags == 'error' %}
+                            <svg class="alert-icon" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                        {% elif message.tags == 'warning' %}
+                            <svg class="alert-icon" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        {% else %}
+                            <svg class="alert-icon" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                        {% endif %}
+                        <div class="alert-message">{{ message }}</div>
+                    </div>
+                    <button type="button" class="alert-close" aria-label="Dismiss">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-              </div>
-            </form>
+    <!-- Page Wrapper (for sticky footer layout) -->
+    <div class="page-wrapper">
 
-          </div>
-          <div class="col-4 d-flex justify-content-end align-items-center">
-            {% if not user.is_authenticated %}
-            <a class="btn btn-sm btn-warning" href="{% url 'login' %}">Login</a> &nbsp;
-            <a class="btn btn-sm btn-outline-secondary" href="{% url 'register' %}">Register</a>
-            {% else %}
-            <span><a href="{% url 'dashboard' %}">Dashboard</a></span>
-            &emsp;
-            <span><a href="{% url 'profile' user.username %}">Profile</a></span>
-            &emsp;
-            <span><a href="{% url 'logout' %}">LogOut</a></span>
-            {% endif %}
-          </div>
+        <!-- Navbar -->
+        <header class="site-navbar" role="banner">
+            <div class="site-navbar-container">
+                <!-- Brand -->
+                <a href="{% url 'home' %}" class="site-navbar-brand" aria-label="An_Idea Home">
+                    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                        <rect width="32" height="32" rx="8" fill="currentColor"/>
+                        <path d="M8 12h16M8 16h12M8 20h8" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                    <span>An_Idea</span>
+                </a>
+
+                <!-- Search (Desktop) -->
+                <form action="{% url 'search' %}" method="get" class="site-navbar-search" role="search">
+                    <div class="site-navbar-search-wrapper">
+                        <svg class="site-navbar-search-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <input type="text" name="keyword" value="{{ request.GET.keyword|default:'' }}" placeholder="Search articles..." class="site-navbar-search-input" aria-label="Search articles">
+                    </div>
+                </form>
+
+                <!-- Navigation (Categories) - Desktop -->
+                <nav class="site-navbar-nav" id="siteNavbarNav" aria-label="Main navigation">
+                    <ul class="site-navbar-nav-list">
+                        <li><a href="{% url 'home' %}" class="site-navbar-nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
+                        {% for cat in categories %}
+                            <li><a href="{% url 'posts_by_category' cat.id %}" class="site-navbar-nav-link">{{ cat.category_name }}</a></li>
+                        {% empty %}
+                            <li><span class="site-navbar-nav-link text-muted">No categories</span></li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+
+                <!-- Actions -->
+                <div class="site-navbar-actions">
+                    <!-- Theme Toggle -->
+                    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme">
+                        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </svg>
+                    </button>
+
+                    {% if user.is_authenticated %}
+                        <!-- User Menu -->
+                        <div class="user-menu" id="userMenu">
+                            <button type="button" class="user-menu-button" aria-expanded="false" aria-haspopup="true" aria-label="User menu">
+                                {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" alt="" class="user-menu-avatar">
+                                {% else %}
+                                    <div class="user-menu-avatar" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px;">
+                                        {{ user.username|first|upper }}
+                                    </div>
+                                {% endif %}
+                                <span>{{ user.username }}</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="user-menu-dropdown" role="menu">
+                                <div class="user-menu-header">Account</div>
+                                <a href="{% url 'profile' user.username %}" class="user-menu-item" role="menuitem">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    Profile
+                                </a>
+                                <a href="{% url 'dashboard' %}" class="user-menu-item" role="menuitem">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                                    Dashboard
+                                </a>
+                                <a href="{% url 'create_blog' %}" class="user-menu-item" role="menuitem">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v16M4 11h16"/></svg>
+                                    New Post
+                                </a>
+                                <div class="user-menu-divider"></div>
+                                <form action="{% url 'logout' %}" method="post" style="width: 100%;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="user-menu-item" role="menuitem" style="width: 100%; text-align: left;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-ghost btn-sm">Log In</a>
+                        <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Sign Up</a>
+                    {% endif %}
+
+                    <!-- Mobile Menu Toggle -->
+                    <button type="button" class="site-navbar-toggle" id="siteNavbarToggle" aria-expanded="false" aria-controls="siteNavbarNav" aria-label="Toggle navigation">
+                        <svg class="menu-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                        <svg class="menu-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="dashboard-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <!-- Main Content -->
+    <main id="mainContent" role="main">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-brand">An_Idea</p>
+                <p class="footer-copyright">&copy; {% now "Y" %} An_Idea. All rights reserved.</p>
+                <p class="footer-copyright">Built with <span aria-hidden="true">❤️</span> by <a href="#" class="footer-link">Mayank Saini</a></p>
+            </div>
         </div>
-      </header>
+    </footer>
 
-      <div class="nav-scroller py-1 mb-2">
-        <nav class="nav d-flex justify-content-between">
-          {% for cat in categories %}
-          <a class="p-2 text-muted" href="{% url 'posts_by_category' cat.id %}">{{ cat.category_name }}</a>
-          {% endfor %}
-        </nav>
-        <hr>
-      </div>
+    </div>
+    <!-- /page-wrapper -->
 
-      {% if messages %}
-      <div class="container mt-3">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-          {{ message }}
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
+    <!-- Bootstrap JS (for dropdowns, modals, etc.) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfH" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-<!-- main content part -->
+    <!-- Custom JS -->
+    <script>
+        // Theme Toggle
+        (function() {
+            var toggle = document.getElementById('themeToggle');
+            var html = document.documentElement;
 
-{% block content %}
+            function setTheme(theme) {
+                html.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                // Also set cookie for server-side if needed
+                document.cookie = 'theme=' + theme + '; path=/; max-age=31536000; SameSite=Lax';
+            }
 
-{% endblock %}
+            function toggleTheme() {
+                var current = html.getAttribute('data-theme');
+                setTheme(current === 'dark' ? 'light' : 'dark');
+            }
 
-<!-- footer part -->
+            if (toggle) {
+                toggle.addEventListener('click', toggleTheme);
+            }
 
-<footer class="blog-footer">
-  <div class="footer-content">
-    <p>© 2026 Django Blog. All rights reserved.</p>
-    <p>Built with ❤️ by <a href="#">Mayank Saini</a></p>
-  </div>
-</footer>
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    setTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+        })();
+
+        // Navbar Mobile Toggle
+        (function() {
+            var toggle = document.getElementById('siteNavbarToggle');
+            var nav = document.getElementById('siteNavbarNav');
+            var menuOpen = toggle.querySelector('.menu-open');
+            var menuClose = toggle.querySelector('.menu-close');
+
+            if (toggle && nav) {
+                toggle.addEventListener('click', function() {
+                    var isOpen = nav.classList.toggle('open');
+                    toggle.setAttribute('aria-expanded', isOpen);
+                    menuOpen.style.display = isOpen ? 'none' : 'block';
+                    menuClose.style.display = isOpen ? 'block' : 'none';
+                });
+
+                // Close on link click
+                nav.querySelectorAll('a').forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        nav.classList.remove('open');
+                        toggle.setAttribute('aria-expanded', 'false');
+                        menuOpen.style.display = 'block';
+                        menuClose.style.display = 'none';
+                    });
+                });
+
+                // Close on outside click
+                document.addEventListener('click', function(e) {
+                    if (!toggle.contains(e.target) && !nav.contains(e.target)) {
+                        nav.classList.remove('open');
+                        toggle.setAttribute('aria-expanded', 'false');
+                        menuOpen.style.display = 'block';
+                        menuClose.style.display = 'none';
+                    }
+                });
+            }
+        })();
+
+        // User Menu Dropdown
+        (function() {
+            var userMenu = document.getElementById('userMenu');
+            if (userMenu) {
+                var button = userMenu.querySelector('.user-menu-button');
+                var dropdown = userMenu.querySelector('.user-menu-dropdown');
+
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userMenu.classList.toggle('open');
+                    button.setAttribute('aria-expanded', userMenu.classList.contains('open'));
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!userMenu.contains(e.target)) {
+                        userMenu.classList.remove('open');
+                        button.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+        })();
+
+        // Auto-dismiss messages
+        (function() {
+            var container = document.getElementById('messagesContainer');
+            if (container) {
+                container.querySelectorAll('.alert').forEach(function(alert) {
+                    setTimeout(function() {
+                        alert.style.opacity = '0';
+                        alert.style.transform = 'translateX(20px)';
+                        setTimeout(function() { alert.remove(); }, 300);
+                    }, 5000);
+
+                    alert.querySelector('.alert-close').addEventListener('click', function() {
+                        alert.style.opacity = '0';
+                        alert.style.transform = 'translateX(20px)';
+                        setTimeout(function() { alert.remove(); }, 300);
+                    });
+                });
+            }
+        })();
+
+        // Sidebar Toggle (Dashboard)
+        (function() {
+            var sidebarToggle = document.getElementById('sidebarToggle');
+            var sidebarClose = document.getElementById('sidebarClose');
+            var sidebar = document.querySelector('.dashboard-sidebar');
+            var overlay = document.getElementById('sidebarOverlay');
+
+            function openSidebar() {
+                sidebar.classList.add('open');
+                sidebar.classList.remove('collapsed');
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', openSidebar);
+            }
+            if (sidebarClose) {
+                sidebarClose.addEventListener('click', closeSidebar);
+            }
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebar);
+            }
+        })();
+
+        // Confirm Dialogs
+        (function() {
+            document.querySelectorAll('[data-confirm]').forEach(function(el) {
+                el.addEventListener('click', function(e) {
+                    if (!confirm(this.getAttribute('data-confirm'))) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        })();
+    </script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

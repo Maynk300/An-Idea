@@ -16,32 +16,45 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path , include
+from django.contrib.sitemaps.views import sitemap
 from . import views
 from django.conf.urls.static import static
 from django.conf import settings
 from blogs import views as BlogsView
+from blogs.sitemaps import BlogSitemap, CategorySitemap, TagSitemap, StaticViewSitemap
+
+sitemaps = {
+    'blogs': BlogSitemap,
+    'categories': CategorySitemap,
+    'tags': TagSitemap,
+    'static': StaticViewSitemap,
+}
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home , name='home'),
-    path('category/',include('blogs.urls') ),
+    path('category/', include('blogs.urls')),
+    path('blogs/search/', BlogsView.search, name='search'),
     path('blogs/<slug:slug>/', BlogsView.blogs , name='blogs'),
     path('blogs/<slug:slug>/comment/', BlogsView.add_comment , name='add_comment'),
     path('blogs/<slug:slug>/like/', BlogsView.like_blog , name='like_blog'),
-    path('blogs/search/',BlogsView.search, name='search'),
     path('register/', views.register, name='register'),
-    path('login/',views.login, name='login'),
+    path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
     path('comment/<int:comment_id>/edit/', BlogsView.edit_comment , name='edit_comment'),
     path('comment/<int:comment_id>/delete/', BlogsView.delete_comment , name='delete_comment'),
 
+    # SEO
+    path('robots.txt', BlogsView.robots_txt, name='robots_txt'),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+
 # Dashboards
-    
-    path('dashboard/',include('dashboards.urls')),
+     
+    path('dashboard/', include('dashboards.urls')),
 
 # Accounts
-    
+     
     path('', include('accounts.urls')),
 
 
-] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

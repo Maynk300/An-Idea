@@ -1,51 +1,122 @@
 {% extends 'base.html' %}
 
+{% block title %}Dashboard | An_Idea{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Your An_Idea dashboard. Manage your posts, categories, and view your statistics.">
+{% endblock %}
+
+{% block og_title %}Dashboard | An_Idea{% endblock %}
+{% block og_description %}Your An_Idea dashboard.{% endblock %}
+{% block og_type %}website{% endblock %}
+{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}
+
+{% block twitter_title %}Dashboard | An_Idea{% endblock %}
+{% block twitter_description %}Your An_Idea dashboard.{% endblock %}
+
 {% block content %}
-
-<div class="row">
-
-    <!-- Left Side -->
-    <div class="col-md-3">
-
-        <div class="nav flex-column nav-pills bg-light" aria-orientation="vertical">
-            <a href="{% url 'dashboard' %}" class="nav-link text-dark {% if request.resolver_match.url_name == 'dashboard' %}bg-warning{% endif %}">Dashboard</a>
-            <a href="{% url 'categories' %}" class="nav-link text-dark {% if request.resolver_match.url_name == 'categories' %}bg-warning{% endif %}">Category</a>
-            <a href="{% url 'my_blogs' %}" class="nav-link text-dark {% if request.resolver_match.url_name == 'my_blogs' %}bg-warning{% endif %}">My Blogs</a>
-            <a href="" class="nav-link text-dark ">Layout</a>
-
-
-        </div>
-    </div>
-
-    <!-- Right Side -->
-
-    <div class="col-md-9">
-        <div class="row">
-            <div class="col">
-                <div class="card border-default mb-3">
-                    <div class="card-header text-center text-uppercase font-weight-bold">All Categories</div>
-                    <div class="card-body text-dark">
-                        <h5 class="card-title text-center">{{category_count}}</h5>
-                    </div>
-                    
-
-                </div>
-
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Dashboard navigation">
+        <header class="dashboard-sidebar-header">
+            <h2 class="dashboard-sidebar-title">Dashboard</h2>
+            <button type="button" class="dashboard-sidebar-close" id="sidebarClose" aria-label="Close sidebar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </header>
+        <nav class="dashboard-sidebar-nav">
+            <div class="dashboard-nav-section">
+                <h3 class="dashboard-nav-section-title">Overview</h3>
+                <a href="{% url 'dashboard' %}" class="dashboard-nav-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    Overview
+                </a>
             </div>
-             <div class="col">
-                <div class="card border-default mb-3">
-                    <div class="card-header text-center text-uppercase font-weight-bold">All Posts</div>
-                    <div class="card-body text-dark">
-                        <h5 class="card-title text-center">{{blog_count}}</h5>
-                    </div>
-                    
+            <div class="dashboard-nav-section">
+                <h3 class="dashboard-nav-section-title">Content</h3>
+                <a href="{% url 'my_blogs' %}" class="dashboard-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    My Blogs
+                    {% if blog_count > 0 %}<span class="dashboard-nav-badge badge badge-primary">{{ blog_count }}</span>{% endif %}
+                </a>
+                <a href="{% url 'create_blog' %}" class="dashboard-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Post
+                </a>
+            </div>
+            <div class="dashboard-nav-section">
+                <h3 class="dashboard-nav-section-title">Organization</h3>
+                <a href="{% url 'categories' %}" class="dashboard-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7.01"/></svg>
+                    Categories
+                    {% if category_count > 0 %}<span class="dashboard-nav-badge badge badge-primary">{{ category_count }}</span>{% endif %}
+                </a>
+            </div>
+        </nav>
+    </aside>
 
+    <!-- Overlay for mobile -->
+    <div class="dashboard-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <!-- Main Content -->
+    <main class="dashboard-main" role="main">
+        <header style="margin-bottom: var(--space-8);">
+            <h1 style="font-size: var(--text-3xl); margin-bottom: var(--space-2);">Dashboard</h1>
+            <p style="color: var(--color-text-secondary);">Welcome back, {{ user.username }}! Here's what's happening with your content.</p>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="dashboard-stats">
+            <article class="stat-card">
+                <div class="stat-card-icon stat-card-icon-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 </div>
+                <div class="stat-card-value">{{ blog_count }}</div>
+                <div class="stat-card-label">Total Posts</div>
+            </article>
 
+            <article class="stat-card">
+                <div class="stat-card-icon stat-card-icon-accent">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7.01"/></svg>
+                </div>
+                <div class="stat-card-value">{{ category_count }}</div>
+                <div class="stat-card-label">Categories</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-card-icon stat-card-icon-success">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                </div>
+                <div class="stat-card-value">{{ user.likes.count }}</div>
+                <div class="stat-card-label">Likes Given</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-card-icon stat-card-icon-warning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div class="stat-card-value">{{ user.comments.count }}</div>
+                <div class="stat-card-label">Comments</div>
+            </article>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card" style="max-width: 600px;">
+            <div class="card-header">
+                <h3 class="card-header-title">Quick Actions</h3>
+            </div>
+            <div class="card-body">
+                <div class="btn-group" style="display: flex; flex-wrap: wrap; gap: var(--space-3);">
+                    <a href="{% url 'create_blog' %}" class="btn btn-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Write New Post
+                    </a>
+                    <a href="{% url 'my_blogs' %}" class="btn btn-secondary">Manage Posts</a>
+                    <a href="{% url 'categories' %}" class="btn btn-secondary">Manage Categories</a>
+                    <a href="{% url 'profile' user.username %}" class="btn btn-secondary">View Profile</a>
+                </div>
             </div>
         </div>
-    </div>
-
+    </main>
 </div>
-
-{%  endblock%}
+{% endblock %}

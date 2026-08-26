@@ -2,10 +2,41 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.sitemaps.views import sitemap
 from .models import Blog, category, Comment, Like, Tag
 from .forms import CommentForm
-from django.db.models import Q
+from .sitemaps import BlogSitemap, CategorySitemap, TagSitemap, StaticViewSitemap
+from django.db.models import Q, Count, Case, When, IntegerField
 from django.core.paginator import Paginator
+
+
+sitemaps = {
+    'blogs': BlogSitemap,
+    'categories': CategorySitemap,
+    'tags': TagSitemap,
+    'static': StaticViewSitemap,
+}
+
+
+def robots_txt(request):
+    """Serve robots.txt for search engine crawlers."""
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /dashboard/",
+        "Disallow: /login/",
+        "Disallow: /logout/",
+        "Disallow: /register/",
+        "Disallow: /comment/",
+        "Disallow: /blogs/*/comment/",
+        "Disallow: /blogs/*/like/",
+        "Disallow: /blogs/search/",
+        "",
+        "Sitemap: " + request.build_absolute_uri('/sitemap.xml'),
+    ]
+    robots_content = "\n".join(lines)
+    return HttpResponse(robots_content, content_type="text/plain")
 
 
 def posts_by_category(request, category_id):
@@ -40,21 +71,70 @@ def posts_by_tag(request, slug):
 
 
 def blogs(request, slug):
-    single_blog = get_object_or_404(Blog, slug=slug, status='Published')
-    comments = single_blog.comments.all()
+    single_blog = get_object_or_404(
+        Blog.objects.select_related('category', 'author').prefetch_related('tags'),
+        slug=slug,
+        status='Published'
+    )
+    comments = single_blog.comments.select_related('author').all()
     comment_form = CommentForm()
 
     user_has_liked = False
     if request.user.is_authenticated:
         user_has_liked = single_blog.likes.filter(user=request.user).exists()
 
+    related_posts = _get_related_posts(single_blog)
+
     context = {
         'single_blog': single_blog,
         'comments': comments,
         'comment_form': comment_form,
         'user_has_liked': user_has_liked,
+        'related_posts': related_posts,
     }
     return render(request, 'blogs.html', context)
+
+
+def _get_related_posts(blog):
+    """Get up to 4 related published posts based on same category and shared tags."""
+    blog_tags = blog.tags.all()
+
+    if not blog_tags and not blog.category_id:
+        return Blog.objects.none()
+
+    tag_ids = list(blog_tags.values_list('id', flat=True))
+
+    related = (
+        Blog.objects.filter(status='Published')
+        .exclude(pk=blog.pk)
+        .select_related('category', 'author')
+        .prefetch_related('tags')
+    )
+
+    if tag_ids:
+        related = related.annotate(
+            shared_tags_count=Count('tags', filter=Q(tags__id__in=tag_ids))
+        )
+    else:
+        related = related.annotate(shared_tags_count=Count('tags', filter=Q(tags__id__in=[])))
+
+    if blog.category_id:
+        related = related.annotate(
+            category_match=Case(
+                When(category_id=blog.category_id, then=1),
+                default=0,
+                output_field=IntegerField(),
+            )
+        )
+    else:
+        related = related.annotate(category_match=0)
+
+    related = related.annotate(
+        relevance_score=Count('tags', filter=Q(tags__id__in=tag_ids)) * 5
+        + Case(When(category_id=blog.category_id, then=10), default=0, output_field=IntegerField())
+    ).order_by('-relevance_score', '-updated_at')[:4]
+
+    return related
 
 
 def search(request):

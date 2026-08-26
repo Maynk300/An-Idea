@@ -1,92 +1,266 @@
 {% extends 'base.html' %}
 
-  {% block content %}
+{% block title %}An_Idea — Discover Ideas & Stories{% endblock %}
 
-    
-  {% for post in featured_Post  %} 
-  {% if forloop.first %}
-<div class="jumbotron p-3 p-md-5 text-white rounded bg-dark" style="background-image: url({{post.featured_image.url}});background-blend-mode: overlay;background-size:cover;">
-    <div class="col-md-8 px-0">
-      <h1 class="display-4 font-italic">{{ post.title }}</h1>
-      <p class="lead my-3">{{ post.short_description|truncatewords:30 }}</p>
-      <p class="lead mb-0"><a href="{% url 'blogs' post.slug %}" class="text-white font-weight-bold">Continue reading...</a></p>
-    </div>
-  </div>
-  {% endif %}
-  {% endfor %}
+{% block meta_description %}
+<meta name="description" content="Discover amazing stories, insights, and ideas on An_Idea — a modern platform for writers and readers to share knowledge and inspire creativity.">
+{% endblock %}
 
-  <!-- Featured Post -->
-   <h3 class="text-uppercase text-warning " style="letter-spacing: 2px;">Featured Posts</h3>
+{% block og_title %}An_Idea — Discover Ideas & Stories{% endblock %}
+{% block og_description %}Discover amazing stories, insights, and ideas on An_Idea — a modern platform for writers and readers.{% endblock %}
+{% block og_type %}website{% endblock %}
 
-  <div class="row mb-2">
-  {% for post in featured_Post %}
-  {% if not forloop.first %}
-    <div class="col-md-6">
-      <div class="card border-0" >
-        <div class="card-body">
-          <h3><a href="{% url 'blogs' post.slug %}" class="text-dark">{{post.title}}</a></h3>
-          <small class="mb-1 text-muted">{{post.created_at | timesince }} ago | {{post.author}}</small>
-          <p class="card-text">{{post.short_description|truncatewords:30}}</p>
+{% block twitter_title %}An_Idea — Discover Ideas & Stories{% endblock %}
+{% block twitter_description %}Discover amazing stories, insights, and ideas on An_Idea — a modern platform for writers and readers.{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero" aria-labelledby="hero-title">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                <span>Discover Amazing Stories</span>
+            </div>
+            <h1 id="hero-title" class="hero-title">Where Ideas Come to Life</h1>
+            <p class="hero-description">A modern platform for writers and readers to share knowledge, inspire creativity, and build communities through the power of words.</p>
+            <div class="hero-actions">
+                <a href="{% url 'create_blog' %}" class="btn btn-primary btn-lg">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Start Writing
+                </a>
+                <a href="#featured-posts" class="btn btn-outline btn-lg">Explore Posts</a>
+            </div>
         </div>
-      </div>
     </div>
-    {% endif %}
-    {% endfor %}
+</section>
 
-  </div>
+<!-- Featured Posts -->
+<section id="featured-posts" aria-labelledby="featured-title">
+    <div class="container">
+        <div class="section-header">
+            <h2 id="featured-title" class="section-title">Featured Stories</h2>
+            <p class="section-subtitle">Handpicked articles from our top writers</p>
+        </div>
 
+        {% if featured_Post %}
+            <div class="featured-card">
+                {% with post=featured_Post.0 %}
+                    {% if post.featured_image %}
+                    <div class="featured-card-image">
+                        <img src="{{ post.featured_image.url }}" alt="" aria-hidden="true">
+                    </div>
+                    {% endif %}
+                    <div class="featured-card-overlay"></div>
+                    <div class="featured-card-content">
+                        <span class="featured-card-category">{{ post.category.category_name }}</span>
+                        <h3 class="featured-card-title"><a href="{% url 'blogs' post.slug %}">{{ post.title }}</a></h3>
+                        <p class="featured-card-excerpt">{{ post.short_description|truncatewords:30 }}</p>
+                        <div class="featured-card-meta">
+                            <div class="featured-card-author">
+                                {% if post.author.profile.profile_picture %}
+                                    <img src="{{ post.author.profile.profile_picture.url }}" alt="{{ post.author.username }}" class="featured-card-author-avatar">
+                                {% else %}
+                                    <div class="featured-card-author-avatar" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                                        {{ post.author.username|first|upper }}
+                                    </div>
+                                {% endif %}
+                                <span>{{ post.author.username }}</span>
+                            </div>
+                            <time class="featured-card-date" datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"M d, Y" }}</time>
+                        </div>
+                    </div>
+                {% endwith %}
+            </div>
+
+            {% if featured_Post|length > 1 %}
+            <div class="blog-grid" style="margin-top: var(--space-8);">
+                {% for post in featured_Post %}
+                    {% if not forloop.first %}
+                    <article class="blog-card" aria-labelledby="post-title-{{ forloop.counter }}">
+                        {% if post.featured_image %}
+                        <div class="blog-card-image">
+                            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy" aria-hidden="true">
+                        </div>
+                        {% endif %}
+                        <div class="blog-card-content">
+                            <div class="blog-card-meta">
+                                <span class="blog-card-category">{{ post.category.category_name }}</span>
+                                <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"M d, Y" }}</time>
+                            </div>
+                            <h3 id="post-title-{{ forloop.counter }}" class="blog-card-title"><a href="{% url 'blogs' post.slug %}">{{ post.title }}</a></h3>
+                            <p class="blog-card-excerpt">{{ post.short_description|truncatewords:25 }}</p>
+                            <div class="blog-card-footer">
+                                <div class="blog-card-author">
+                                    {% if post.author.profile.profile_picture %}
+<img src="{{ post.author.profile.profile_picture.url }}" alt="{{ post.author.username }}" class="blog-card-author-avatar">
+                                    {% else %}
+                                        <div class="blog-card-author-avatar" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                            {{ post.author.username|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <span class="blog-card-author-name">{{ post.author.username }}</span>
+                                </div>
+                                <div class="blog-card-stats">
+                                    <span class="blog-card-stat" title="Likes">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                        {{ post.likes.count }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                <h3 class="empty-state-title">No Featured Posts Yet</h3>
+                <p class="empty-state-description">Be the first to create a featured post!</p>
+                <a href="{% url 'create_blog' %}" class="btn btn-primary">Write Your First Post</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
 
 <!-- Recent Posts -->
-   <h3 class="text-uppercase text-warning " style="letter-spacing: 2px;">Recent Posts</h3>
-
-  <main role="main" class="container p-0">
-    <div class="row">
-      <div class="col-md-8 blog-main">
-
-       {% for post in recent_post %}
-    <div class="card border-0" >
-        <div class="card-body">
-          <h3><a href="{% url 'blogs' post.slug %}" class="text-dark">{{post.title}}</a> </h3>
-          <small class="mb-1 text-muted">{{post.created_at | timesince }} ago | {{post.author}}</small>
-          <p class="card-text">{{post.short_description|truncatewords:30}}</p>
+<section id="recent-posts" aria-labelledby="recent-title">
+    <div class="container">
+        <div class="section-header">
+            <h2 id="recent-title" class="section-title">Latest Articles</h2>
+            <p class="section-subtitle">Fresh content from our community of writers</p>
         </div>
-      </div>
-      {% endfor %}
-      </div>
-      <!-- /.blog-main -->
 
-      <!-- Pagination for recent posts -->
-      {% if recent_post.has_other_pages %}
-      <div class="col-12 mt-4">
-          {% include 'partials/pagination.html' with page_obj=recent_post query_params='' %}
-      </div>
-      {% endif %}
-
-      <aside class="col-md-4 blog-sidebar">
-        <div class="p-3 mb-3 bg-light rounded">
-          <h4 class="font-italic">{{about.about_hdng}}</h4>
-          <p class="mb-0">{{about.about_data}}</p>
-        </div>
-      
-
-        {% if social %}
-        <div class="p-3">
-          <h4 class="font-italic">Follow Us</h4>
-          <ol class="list-unstyled">
-            {% for i in social %}
-            <li><a href="{{i.link}}" target=" _blank">{{i.plateform}}</a></li>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for post in recent_post %}
+            <article class="blog-card" aria-labelledby="recent-title-{{ forloop.counter }}">
+                {% if post.featured_image %}
+                <div class="blog-card-image">
+                    <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy" aria-hidden="true">
+                </div>
+                {% else %}
+                <div class="blog-card-image" style="background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent)); display: flex; align-items: center; justify-content: center;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" aria-hidden="true" style="opacity: 0.5;">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    </svg>
+                </div>
+                {% endif %}
+                <div class="blog-card-content">
+                    <div class="blog-card-meta">
+                        <span class="blog-card-category">{{ post.category.category_name }}</span>
+                        <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"M d, Y" }}</time>
+                    </div>
+                    <h3 id="recent-title-{{ forloop.counter }}" class="blog-card-title"><a href="{% url 'blogs' post.slug %}">{{ post.title }}</a></h3>
+                    <p class="blog-card-excerpt">{{ post.short_description|truncatewords:25 }}</p>
+                    <div class="blog-card-footer">
+                        <div class="blog-card-author">
+                            {% if post.author.profile.profile_picture %}
+                                <img src="{{ post.author.profile.profile_picture.url }}" alt="" class="blog-card-author-avatar">
+                            {% else %}
+                                <div class="blog-card-author-avatar" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                    {{ post.author.username|first|upper }}
+                                </div>
+                            {% endif %}
+                            <span class="blog-card-author-name">{{ post.author.username }}</span>
+                        </div>
+                        <div class="blog-card-stats">
+                            <span class="blog-card-stat" title="Likes">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                {{ post.likes.count }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% empty %}
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                <h3 class="empty-state-title">No Posts Yet</h3>
+                <p class="empty-state-description">Start reading by creating your first post or wait for others to publish.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'create_blog' %}" class="btn btn-primary">Create Your First Post</a>
+                {% endif %}
+            </div>
             {% endfor %}
-            
-          </ol>
         </div>
 
+        {% if recent_post.has_other_pages %}
+        <nav class="pagination" aria-label="Pagination" style="margin-top: var(--space-8);">
+            {% include 'partials/pagination.html' with page_obj=recent_post query_params='' %}
+        </nav>
         {% endif %}
-      </aside><!-- /.blog-sidebar -->
 
-    </div><!-- /.row -->
+        <!-- Sidebar Content (Categories & About) -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8" style="margin-top: var(--space-12);">
+            <div class="lg:col-span-3">
+                <!-- Already rendered above -->
+            </div>
+            <aside class="lg:col-span-1" aria-label="Sidebar">
+                <!-- Categories -->
+                <div class="card" style="margin-bottom: var(--space-6);">
+                    <div class="card-header">
+                        <h3 class="card-header-title">Categories</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-unstyled m-0">
+                            {% for cat in categories %}
+                            <li>
+                                <a href="{% url 'posts_by_category' cat.id %}" class="flex items-center justify-between p-4 border-t border-border hover:bg-surface-hover transition-colors" style="border-color: var(--color-border);">
+                                    <span class="font-medium text-text">{{ cat.category_name }}</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </a>
+                            </li>
+                            {% empty %}
+                            <li class="p-4 text-center text-muted">No categories</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
 
-  </main><!-- /.container -->
+                <!-- About -->
+                {% if about %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-header-title">{{ about.about_hdng }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-secondary mb-0">{{ about.about_data }}</p>
+                    </div>
+                </div>
+                {% endif %}
 
-</div>
-
+                <!-- Follow Us -->
+                {% if social %}
+                <div class="card" style="margin-top: var(--space-6);">
+                    <div class="card-header">
+                        <h3 class="card-header-title">Follow Us</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled m-0 space-y-2">
+                            {% for i in social %}
+                            <li>
+                                <a href="{{ i.link }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-hover transition-colors text-text-secondary">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 13.5a2.5 2.5 0 0 1-2.5 2.5H8.5A2.5 2.5 0 0 1 6 13.5v-7A2.5 2.5 0 0 1 8.5 4H12"/></svg>
+                                    <span class="font-medium">{{ i.plateform }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </aside>
+        </div>
+    </div>
+</section>
 {% endblock %}

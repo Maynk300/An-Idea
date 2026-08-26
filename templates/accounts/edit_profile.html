@@ -1,54 +1,229 @@
 {% extends 'base.html' %}
 
+{% block title %}Edit Profile — An_Idea{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">Edit Profile</h4>
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Dashboard navigation">
+        <header class="dashboard-sidebar-header">
+            <h2 class="dashboard-sidebar-title">Dashboard</h2>
+            <button type="button" class="dashboard-sidebar-close" id="sidebarClose" aria-label="Close sidebar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </header>
+        <nav class="dashboard-sidebar-nav">
+            <div class="dashboard-nav-section">
+                <h3 class="dashboard-nav-section-title">Overview</h3>
+                <a href="{% url 'dashboard' %}" class="dashboard-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    Overview
+                </a>
             </div>
-            <div class="card-body">
-                <form method="POST" enctype="multipart/form-data" novalidate>
-                    {% csrf_token %}
+            <div class="dashboard-nav-section">
+                <h3 class="dashboard-nav-section-title">Content</h3>
+                <a href="{% url 'my_blogs' %}" class="dashboard-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    My Blogs
+                </a>
+                <a href="{% url 'create_blog' %}" class="dashboard-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Post
+                </a>
+            </div>
+            <div class="dashboard-nav-section">
+                <h3 class="dashboard-nav-section-title">Organization</h3>
+                <a href="{% url 'categories' %}" class="dashboard-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7.01"/></svg>
+                    Categories
+                </a>
+            </div>
+            <div class="dashboard-nav-section">
+                <h3 class="dashboard-nav-section-title">Account</h3>
+                <a href="{% url 'profile' user.username %}" class="dashboard-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Profile
+                </a>
+                <a href="{% url 'edit_profile' %}" class="dashboard-nav-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Profile
+                </a>
+            </div>
+        </nav>
+    </aside>
 
+    <!-- Overlay for mobile -->
+    <div class="dashboard-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <!-- Main Content -->
+    <main class="dashboard-main" role="main">
+        <header style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-8);">
+            <div>
+                <h1 style="font-size: var(--text-3xl); margin-bottom: var(--space-2);">Edit Profile</h1>
+                <p style="color: var(--color-text-secondary);">Update your profile information</p>
+            </div>
+            <a href="{% url 'profile' user.username %}" class="btn btn-secondary">View Profile</a>
+        </header>
+
+        <div style="max-width: 700px;">
+            <form method="POST" enctype="multipart/form-data" novalidate class="card">
+                {% csrf_token %}
+
+                <!-- Profile Picture -->
+                <div class="card-body" style="padding-bottom: var(--space-4);">
                     <div class="form-group">
-                        <label for="{{ form.profile_picture.id_for_label }}">Profile Picture</label>
-                        {% if profile.profile_picture %}
-                        <div class="mb-2">
-                            <img src="{{ profile.profile_picture.url }}" alt="Current profile picture" class="img-thumbnail" style="max-width: 150px;">
+                        <label for="{{ form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
+                        <div class="file-upload">
+                            <div class="file-upload-area" id="avatarUploadArea">
+                                <input type="file" name="{{ form.profile_picture.name }}" id="{{ form.profile_picture.id_for_label }}" class="file-upload-input" accept="image/*" {% if form.profile_picture.value %}style="display: none;"{% endif %}>
+                                <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                <p class="file-upload-text">Drag & drop or click to upload</p>
+                                <p class="file-upload-hint">PNG, JPG, WebP, GIF up to 5MB</p>
+                            </div>
+                            <div class="file-upload-preview" id="avatarPreview" style="display: none;">
+                                <img id="avatarPreviewImage" src="" alt="Preview">
+                                <div class="file-upload-info">
+                                    <p class="file-upload-name" id="avatarPreviewName"></p>
+                                    <p class="file-upload-size" id="avatarPreviewSize"></p>
+                                </div>
+                                <button type="button" class="file-upload-remove" id="removeAvatar" aria-label="Remove image">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                            {% if form.profile_picture.errors %}
+                            <div class="form-error">{{ form.profile_picture.errors }}</div>
+                            {% endif %}
+                            <div class="form-help">Max 5MB. Formats: JPEG, PNG, WebP, GIF</div>
                         </div>
-                        {% endif %}
-                        {{ form.profile_picture }}
-                        {% if form.profile_picture.errors %}
-                        <div class="text-danger mt-1">
-                            {% for error in form.profile_picture.errors %}
-                            <small>{{ error }}</small>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        <small class="form-text text-muted">Max 5MB. Formats: JPEG, PNG, WebP, GIF</small>
                     </div>
+                </div>
 
+                <hr style="margin: 0 var(--space-5); border-color: var(--color-border);">
+
+                <!-- Bio -->
+                <div class="card-body" style="padding-top: var(--space-4); padding-bottom: var(--space-4);">
                     <div class="form-group">
-                        <label for="{{ form.bio.id_for_label }}">Bio</label>
+                        <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label>
                         {{ form.bio }}
                         {% if form.bio.errors %}
-                        <div class="text-danger mt-1">
-                            {% for error in form.bio.errors %}
-                            <small>{{ error }}</small>
-                            {% endfor %}
-                        </div>
+                        <div class="form-error">{{ form.bio.errors }}</div>
                         {% endif %}
-                        <small class="form-text text-muted">Max 500 characters</small>
+                        <div class="form-help">Max 500 characters. Tell us about yourself!</div>
                     </div>
+                </div>
 
-                    <div class="mt-3">
-                        <button type="submit" class="btn btn-warning">Save Changes</button>
-                        <a href="{% url 'profile' username=request.user.username %}" class="btn btn-outline-secondary ml-2">Cancel</a>
+                <hr style="margin: 0 var(--space-5); border-color: var(--color-border);">
+
+                <!-- Actions -->
+                <div class="card-footer">
+                    <div style="display: flex; gap: var(--space-3); justify-content: flex-end; flex-wrap: wrap;">
+                        <a href="{% url 'profile' user.username %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
-    </div>
+    </main>
 </div>
+
+{% block extra_js %}
+<script>
+    // Avatar Upload Preview
+    (function() {
+        const input = document.getElementById('{{ form.profile_picture.id_for_label }}');
+        const area = document.getElementById('avatarUploadArea');
+        const preview = document.getElementById('avatarPreview');
+        const previewImg = document.getElementById('avatarPreviewImage');
+        const previewName = document.getElementById('avatarPreviewName');
+        const previewSize = document.getElementById('avatarPreviewSize');
+        const removeBtn = document.getElementById('removeAvatar');
+
+        if (!input) return;
+
+        // Handle drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            area.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            area.addEventListener(eventName, () => area.classList.add('drag-over'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            area.addEventListener(eventName, () => area.classList.remove('drag-over'), false);
+        });
+
+        area.addEventListener('drop', handleDrop, false);
+        input.addEventListener('change', handleFiles, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles({ target: { files } });
+        }
+
+        function handleFiles(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                alert('Invalid file type. Please upload JPEG, PNG, WebP, or GIF.');
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be under 5MB.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewName.textContent = file.name;
+                previewSize.textContent = formatFileSize(file.size);
+                area.style.display = 'none';
+                preview.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        removeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            input.value = '';
+            previewImg.src = '';
+            area.style.display = 'flex';
+            preview.style.display = 'none';
+        });
+
+        // If there's an existing image, show preview
+        {% if form.profile_picture.value %}
+        (function() {
+            const existingUrl = "{{ form.profile_picture.value.url }}";
+            const existingName = "{{ form.profile_picture.value.name|cut:'uploads/' }}";
+            previewImg.src = existingUrl;
+            previewName.textContent = existingName;
+            previewSize.textContent = 'Existing';
+            area.style.display = 'none';
+            preview.style.display = 'flex';
+        })();
+        {% endif %}
+    })();
+</script>
+{% endblock %}
 {% endblock %}

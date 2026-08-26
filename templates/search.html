@@ -1,32 +1,107 @@
 {% extends 'base.html' %}
 
+{% block title %}Search: {{ keyword }} | An_Idea{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Search results for '{{ keyword }}' on An_Idea. Find articles, stories, and insights from our community of writers.">
+{% endblock %}
+
+{% block canonical_url %}
+<link rel="canonical" href="{{ request.build_absolute_uri }}">
+{% endblock %}
+
+{% block og_title %}Search: {{ keyword }} | An_Idea{% endblock %}
+{% block og_description %}Search results for '{{ keyword }}' on An_Idea.{% endblock %}
+{% block og_type %}website{% endblock %}
+{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}
+
+{% block twitter_title %}Search: {{ keyword }} | An_Idea{% endblock %}
+{% block twitter_description %}Search results for '{{ keyword }}' on An_Idea.{% endblock %}
+
 {% block content %}
+<!-- Search Hero -->
+<section class="search-hero">
+    <div class="container">
+        <h1 class="search-title">Search Results for <span class="search-keyword">"{{ keyword }}"</span></h1>
 
- <h3 class=" text-warning " style="letter-spacing: 2px;">Search Term -{{ keyword }}</h3>
+        <form action="{% url 'search' %}" method="get" class="search-form">
+            <input type="text" name="keyword" value="{{ keyword }}" placeholder="Search articles..." class="search-form-input" aria-label="Search">
+            <button type="submit" class="btn btn-primary search-form-button">Search</button>
+        </form>
 
-  <div class="row mb-2">
-
-    {% if blogs %}
-  {% for i in blogs %}
-
-    <div class="col-md-6">
-      <div class="card border-0" >
-        <div class="card-body">
-          <h3><a href="{% url 'blogs' i.slug %}" class="text-dark">{{i.title}}</a> </h3>
-          <small class="mb-1 text-muted">{{i.created_at | timesince }} ago | {{i.author}}</small>
-          <p class="card-text">{{i.short_description|truncatewords:30}}</p>
-        </div>
-      </div>
+        {% if blogs %}
+        <p class="search-results-count">{{ blogs.paginator.count }} result{{ blogs.paginator.count|pluralize }} found</p>
+        {% endif %}
     </div>
-    {% endfor %}
-    {% else %}
-    <p>No posts found for "{{ keyword }}".</p>
+</section>
+
+<div class="container">
+    {% if blogs %}
+    <div class="blog-grid">
+        {% for post in blogs %}
+        <article class="blog-card" aria-labelledby="search-title-{{ forloop.counter }}">
+            {% if post.featured_image %}
+            <div class="blog-card-image">
+                <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy" aria-hidden="true">
+            </div>
+            {% else %}
+            <div class="blog-card-image" style="background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent)); display: flex; align-items: center; justify-content: center;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" aria-hidden="true" style="opacity: 0.5;">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+            </div>
+            {% endif %}
+            <div class="blog-card-content">
+                <div class="blog-card-meta">
+                    <span class="blog-card-category">{{ post.category.category_name }}</span>
+                    <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"M d, Y" }}</time>
+                </div>
+                <h3 id="search-title-{{ forloop.counter }}" class="blog-card-title"><a href="{% url 'blogs' post.slug %}">{{ post.title }}</a></h3>
+                <p class="blog-card-excerpt">{{ post.short_description|truncatewords:25 }}</p>
+                <div class="blog-card-footer">
+                    <div class="blog-card-author">
+                        {% if post.author.profile.profile_picture %}
+                            <img src="{{ post.author.profile.profile_picture.url }}" alt="{{ post.author.username }}" class="blog-card-author-avatar">
+                        {% else %}
+                            <div class="blog-card-author-avatar" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                {{ post.author.username|first|upper }}
+                            </div>
+                        {% endif %}
+                        <span class="blog-card-author-name">{{ post.author.username }}</span>
+                    </div>
+                    <div class="blog-card-stats">
+                        <span class="blog-card-stat" title="Likes">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            {{ post.likes.count }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    {% if blogs.has_other_pages %}
+    <nav class="pagination" aria-label="Pagination" style="margin-top: var(--space-10);">
+        {% include 'partials/pagination.html' with page_obj=blogs query_params=query_params %}
+    </nav>
     {% endif %}
-
-  {% if blogs.has_other_pages %}
-  <div class="col-12 mt-4">
-      {% include 'partials/pagination.html' with page_obj=blogs query_params=query_params %}
-  </div>
-  {% endif %}
-
+    {% else %}
+    <div class="empty-state" style="max-width: 500px; margin: var(--space-16) auto;">
+        <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <h3 class="empty-state-title">No Results Found</h3>
+        <p class="empty-state-description">We couldn't find any articles matching "<strong>{{ keyword }}</strong>".</p>
+        <div style="margin-top: var(--space-6);">
+            <p class="text-secondary text-sm">Try:</p>
+            <ul class="list-disc list-inside text-secondary text-sm mt-2 space-y-1" style="max-width: 300px; margin: var(--space-4) auto;">
+                <li>Checking your spelling</li>
+                <li>Using more general terms</li>
+                <li>Trying different keywords</li>
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

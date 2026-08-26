@@ -23,9 +23,14 @@ class category(models.Model):
 
     class Meta:
         verbose_name_plural = 'categories'
+        ordering = ['category_name']
 
     def __str__(self):
         return self.category_name
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('posts_by_category', args=[self.pk])
 
 
 STATUS_CHOICES = (
@@ -54,6 +59,10 @@ class Blog(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('blogs', args=[self.slug])
+
 
 class Comment(models.Model):
     blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='comments')
@@ -79,6 +88,10 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('posts_by_tag', args=[self.slug])
 
 
 class Like(models.Model):
